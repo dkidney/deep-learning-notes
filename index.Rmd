@@ -1,6 +1,6 @@
 --- 
 title: "Deep Learning Notes"
-author: "Daarren Kidney"
+author: "Darren Kidney"
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 output: bookdown::gitbook
