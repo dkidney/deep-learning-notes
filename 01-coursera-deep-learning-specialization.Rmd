@@ -2,6 +2,198 @@
 
 ## Neural Networks and Deep Learning
 
+### Logistic regression
+
+#### Traditional model formulation {-}
+
+Link function (logit):
+$$\log\left(\frac{p_i}{1-p_i}\right) = b + w_1x_{i1} + w_2x_{i2} + ...  = z_i$$
+where, $p_i=p(y_i=1)$
+
+Inverse link function:
+$$p_i=p(y_i=1\;|\;X_i)=\sigma(z_i)=\frac{\exp(z_i)}{1+\exp(z_i)}=\frac{1}{1+\exp(-z_i)}$$
+Likelihood (using $p(y_i)$ for brevity instead of $p(y_i\;|\;X_i)$):
+$$L(\mathbf{\beta}\;|\;\mathbf{X})=\prod_ip(y_i)=\prod_ip(y_i=1)^{y_i}p(y_i=0)^{(1-y_i)}$$
+Log-likelihood:
+$$\ell(\mathbf{\beta}\;|\;\mathbf{X})=\log\left[\prod_ip(y_i=1)^{y_i}\ast p(y_i=0)^{(1-y_i)}\right]$$
+$$=\sum_i\log\left[p(y_i=1)^{y_i}\ast p(y_i=0)^{(1-y_i)}\right]$$
+$$=\sum_i\log\left[p(y_i=1)^{y_i}\right)+\log\left[p(y_i=0)^{(1-y_i)}\right)$$
+$$=\sum_iy_i\log\left[p(y_i=1)\right]+(1-y_i)\log\left[p(y_i=0)\right]$$
+<!-- $$=\sum_iy_i\log\left[p(y_i=1)\right]+\log\left[p(y_i=0)\right]-y_i\log\left[p(y_i=0)\right]$$ -->
+<!-- $$=\sum_iy_i\left(\log\left[p(y_i=1)\right]-\log\left[p(y_i=0)\right]\right)+\log\left[p(y_i=0)\right]$$ -->
+
+### Single layer neural network
+
+A single hidden layer neural network is like logistic regression, but repeated a lot of times.
+
+#### Notation {-}
+
+$\mathbf{x}^{(i)}$ = vector of input feature values for $i$th training example
+
+$x_p^{(i)}$ = value of input feature $p$ for $i$th training example $i$
+
+$\mathbf{W}^{[k]}$ = matrix of weight values for layer $k$
+
+$\mathbf{w}_j^{[k]}$ = vector of weight values for layer $k$ node $j$
+
+$w_{j, p}^{[k]}$ = value of weight for feature $p$ for layer $k$ node $j$
+
+$\mathbf{a}^{[k]}$ = activations for layer $k$ 
+
+$\mathbf{a}_{j}^{[k]}$ = activations for layer $k$ node $j$ 
+
+$a_{j}^{[k](i)}$ = activation for $i$th training example for node $j$ layer $k$
+
+#### Formulation {-}
+
+##### Input layer {-}
+
+E.g. Three nodes (one node per input feature).
+
+$$
+\mathbf{a}^{[0]} = \mathbf{X} 
+$$
+
+equivalently, 
+
+$$
+\begin{bmatrix} 
+  \mathbf{a}_1^{[0]} \\ 
+  \mathbf{a}_2^{[0]} \\ 
+  \mathbf{a}_3^{[0]} 
+\end{bmatrix}
+= \begin{bmatrix} 
+  \mathbf{x}_1 \\ 
+  \mathbf{x}_2 \\ 
+  \mathbf{x}_3 
+\end{bmatrix}
+$$
+
+$$
+\begin{bmatrix} 
+  a^{[0](1)}_1 \ a^{[0](1)}_1 \ ... \\ 
+  a^{[0](1)}_2 \ a^{[0](1)}_2 \ ... \\ 
+  a^{[0](1)}_3 \ a^{[0](1)}_3 \ ... \\ 
+\end{bmatrix}
+=\begin{bmatrix} 
+  x^{(1)}_1 \ x^{(2)}_1 \ ... \\ 
+  x^{(1)}_2 \ x^{(2)}_2 \ ... \\ 
+  x^{(1)}_3 \ x^{(2)}_3 \ ... \\ 
+\end{bmatrix}
+$$
+
+##### Hidden layer {-}
+
+E.g. Four nodes.
+
+$$\mathbf{a}^{[1]} = \sigma(\mathbf{z}^{[1]}) = \sigma(\mathbf{W}^{[1]T}\mathbf{x} + \mathbf{b}^{[1]})$$
+
+equivalently, 
+$$\mathbf{a}_1^{[1]} = \sigma(\mathbf{z}_1^{[1]}) = \sigma(\mathbf{w}_1^{[1]T}\mathbf{x} + b_1^{[1]})$$
+$$\mathbf{a}_2^{[1]} = \sigma(\mathbf{z}_2^{[1]}) = \sigma(\mathbf{w}_2^{[1]T}\mathbf{x} + b_2^{[1]})$$
+$$\mathbf{a}_3^{[1]} = \sigma(\mathbf{z}_3^{[1]}) = \sigma(\mathbf{w}_3^{[1]T}\mathbf{x} + b_3^{[1]})$$
+$$\mathbf{a}_4^{[1]} = \sigma(\mathbf{z}_4^{[1]}) = \sigma(\mathbf{w}_4^{[1]T}\mathbf{x} + b_4^{[1]})$$
+
+equivalently, 
+
+$$
+\begin{bmatrix} 
+  \mathbf{a}_1^{[1]} \\ 
+  \mathbf{a}_2^{[1]} \\ 
+  \mathbf{a}_3^{[1]} \\ 
+  \mathbf{a}_4^{[1]} 
+\end{bmatrix} 
+= \sigma\left(
+\begin{bmatrix} 
+  \mathbf{z}_1^{[1]} \\ 
+  \mathbf{z}_2^{[1]} \\ 
+  \mathbf{z}_3^{[1]} \\ 
+  \mathbf{z}_4^{[1]}
+\end{bmatrix}
+\right)
+$$
+
+$$
+\begin{bmatrix} 
+  \mathbf{a}_1^{[1]} \\ 
+  \mathbf{a}_2^{[1]} \\ 
+  \mathbf{a}_3^{[1]} \\ 
+  \mathbf{a}_4^{[1]} 
+\end{bmatrix} 
+= \sigma\left(
+\begin{bmatrix} 
+  \mathbf{w}_1^{[1]T} \\ 
+  \mathbf{w}_2^{[1]T} \\ 
+  \mathbf{w}_3^{[1]T} \\ 
+  \mathbf{w}_4^{[1]T} \\ 
+\end{bmatrix}
+\begin{bmatrix} 
+  \mathbf{x}_1 \\ 
+  \mathbf{x}_2 \\ 
+  \mathbf{x}_3 
+\end{bmatrix}
++ \begin{bmatrix} 
+  b_1^{[1]} \\
+  b_2^{[1]} \\ 
+  b_3^{[1]} \\
+  b_4^{[1]} \\
+\end{bmatrix} 
+\right)
+$$
+
+$$
+\begin{bmatrix} 
+  a_1^{[1](1)} \ a_1^{[1](2)} \ ... \\ 
+  a_2^{[1](1)} \ a_2^{[1](2)} \ ... \\ 
+  a_3^{[1](1)} \ a_3^{[1](2)} \ ... \\ 
+  a_4^{[1](1)} \ a_4^{[1](2)} \ ... \\ 
+\end{bmatrix} 
+= \sigma\left(
+\begin{bmatrix} 
+  w_{1,1}^{[1]} \ w_{1,2}^{[1]} \ w_{1,3}^{[1]} \\ 
+  w_{2,1}^{[1]} \ w_{2,2}^{[1]} \ w_{2,3}^{[1]} \\ 
+  w_{3,1}^{[1]} \ w_{3,2}^{[1]} \ w_{3,3}^{[1]} \\ 
+  w_{4,1}^{[1]} \ w_{4,2}^{[1]} \ w_{4,3}^{[1]} \\ 
+\end{bmatrix}
+\begin{bmatrix} 
+  x^{(1)}_1 \ x^{(2)}_1 \ ... \\ 
+  x^{(1)}_2 \ x^{(2)}_2 \ ... \\ 
+  x^{(1)}_3 \ x^{(2)}_3 \ ... \\ 
+\end{bmatrix}
++ \begin{bmatrix} 
+  b_1^{[1]} \\
+  b_2^{[1]} \\ 
+  b_3^{[1]} \\
+  b_4^{[1]} \\
+\end{bmatrix} 
+\right)
+$$
+
+##### Output layer {-}
+
+Single node.
+
+$$\mathbf{a}^{[2]} = \sigma(\mathbf{z}^{[2]}) = \sigma(\mathbf{w}^{T[2]}\mathbf{a}^{[1]} + b^{[2]})$$
+equivalently, 
+
+$$
+\begin{bmatrix} 
+  a_1^{[2](1)} \ a_1^{[2](2)} \ ... \\
+\end{bmatrix} 
+= \sigma\left(
+\begin{bmatrix} 
+  w_{1, 1}^{[2]} \  w_{1, 2}^{[2]} \ w_{1, 3}^{[2]} \ w_{1, 4}^{[2]} \\
+\end{bmatrix} 
+\begin{bmatrix} 
+  a_1^{[1](1)} \ a_1^{[1](2)} \ ... \\ 
+  a_2^{[1](1)} \ a_2^{[1](2)} \ ... \\ 
+  a_3^{[1](1)} \ a_3^{[1](2)} \ ... \\ 
+  a_4^{[1](1)} \ a_4^{[1](2)} \ ... \\ 
+\end{bmatrix} 
+  + b_1^{[2]}
+\right)
+$$
+
 ## Improving Deep Neural Networks: Hyperparameter Tuning, Regularization and Optimization
 
 ## Structuring Machine Learning Projects
