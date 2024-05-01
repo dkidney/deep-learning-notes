@@ -2,6 +2,11 @@
 
 ## Neural Networks and Deep Learning
 
+[Logistic regression]  
+[Single layer neural network]  
+[Activation functions]  
+[Gradient descent]
+
 ### Logistic regression
 
 #### Traditional model formulation {-}
@@ -28,9 +33,9 @@ A single hidden layer neural network is like logistic regression, but repeated a
 
 #### Notation {-}
 
-$\mathbf{x}^{(i)}$ = vector of input feature values for $i$th training example
+$\mathbf{x}^{(i)}$ = vector of input feature values for the $i$th training example
 
-$x_p^{(i)}$ = value of input feature $p$ for $i$th training example $i$
+$x_p^{(i)}$ = value of input feature $p$ for the $i$th training example $i$
 
 $\mathbf{W}^{[k]}$ = matrix of weight values for layer $k$
 
@@ -42,13 +47,15 @@ $\mathbf{a}^{[k]}$ = activations for layer $k$
 
 $\mathbf{a}_{j}^{[k]}$ = activations for layer $k$ node $j$ 
 
-$a_{j}^{[k](i)}$ = activation for $i$th training example for node $j$ layer $k$
+$a_{j}^{[k](i)}$ = activation for the $i$th training example for node $j$ layer $k$
+
+$n^{[k]}$ = number of nodes in layer $k$
 
 #### Formulation {-}
 
 ##### Input layer {-}
 
-E.g. Three nodes (one node per input feature).
+E.g. three nodes - one node per input feature ($n^{[0]}=3$).
 
 $$
 \mathbf{a}^{[0]} = \mathbf{X} 
@@ -62,7 +69,8 @@ $$
   \mathbf{a}_2^{[0]} \\ 
   \mathbf{a}_3^{[0]} 
 \end{bmatrix}
-= \begin{bmatrix} 
+= 
+\begin{bmatrix} 
   \mathbf{x}_1 \\ 
   \mathbf{x}_2 \\ 
   \mathbf{x}_3 
@@ -71,22 +79,23 @@ $$
 
 $$
 \begin{bmatrix} 
-  a^{[0](1)}_1 \ a^{[0](1)}_1 \ ... \\ 
-  a^{[0](1)}_2 \ a^{[0](1)}_2 \ ... \\ 
-  a^{[0](1)}_3 \ a^{[0](1)}_3 \ ... \\ 
+  a^{[0](1)}_1 \ ... \ a^{[0](m)}_1 \\ 
+  a^{[0](1)}_2 \ ... \ a^{[0](m)}_2 \\ 
+  a^{[0](1)}_3 \ ... \ a^{[0](m)}_3 \\ 
 \end{bmatrix}
-=\begin{bmatrix} 
-  x^{(1)}_1 \ x^{(2)}_1 \ ... \\ 
-  x^{(1)}_2 \ x^{(2)}_2 \ ... \\ 
-  x^{(1)}_3 \ x^{(2)}_3 \ ... \\ 
+=
+\begin{bmatrix} 
+  x^{(1)}_1 \ ... x^{(m)}_1 \\ 
+  x^{(1)}_2 \ ... x^{(m)}_2 \\ 
+  x^{(1)}_3 \ ... x^{(m)}_3 \\ 
 \end{bmatrix}
 $$
 
 ##### Hidden layer {-}
 
-E.g. Four nodes.
+E.g. four nodes ($n^{[1]}=4$).
 
-$$\mathbf{a}^{[1]} = \sigma(\mathbf{z}^{[1]}) = \sigma(\mathbf{W}^{[1]T}\mathbf{x} + \mathbf{b}^{[1]})$$
+$$\mathbf{a}^{[1]} = \sigma(\mathbf{z}^{[1]}) = \sigma(\mathbf{W}^{[1]}\mathbf{x} + \mathbf{b}^{[1]})$$
 
 equivalently, 
 $$\mathbf{a}_1^{[1]} = \sigma(\mathbf{z}_1^{[1]}) = \sigma(\mathbf{w}_1^{[1]T}\mathbf{x} + b_1^{[1]})$$
@@ -103,7 +112,8 @@ $$
   \mathbf{a}_3^{[1]} \\ 
   \mathbf{a}_4^{[1]} 
 \end{bmatrix} 
-= \sigma\left(
+= 
+\sigma\left(
 \begin{bmatrix} 
   \mathbf{z}_1^{[1]} \\ 
   \mathbf{z}_2^{[1]} \\ 
@@ -120,19 +130,21 @@ $$
   \mathbf{a}_3^{[1]} \\ 
   \mathbf{a}_4^{[1]} 
 \end{bmatrix} 
-= \sigma\left(
+= 
+\sigma\left(
 \begin{bmatrix} 
-  \mathbf{w}_1^{[1]T} \\ 
-  \mathbf{w}_2^{[1]T} \\ 
-  \mathbf{w}_3^{[1]T} \\ 
-  \mathbf{w}_4^{[1]T} \\ 
+  \mathbf{w}_1^{[1]} \\ 
+  \mathbf{w}_2^{[1]} \\ 
+  \mathbf{w}_3^{[1]} \\ 
+  \mathbf{w}_4^{[1]} \\ 
 \end{bmatrix}
 \begin{bmatrix} 
   \mathbf{x}_1 \\ 
   \mathbf{x}_2 \\ 
   \mathbf{x}_3 
 \end{bmatrix}
-+ \begin{bmatrix} 
++ 
+\begin{bmatrix} 
   b_1^{[1]} \\
   b_2^{[1]} \\ 
   b_3^{[1]} \\
@@ -143,10 +155,10 @@ $$
 
 $$
 \begin{bmatrix} 
-  a_1^{[1](1)} \ a_1^{[1](2)} \ ... \\ 
-  a_2^{[1](1)} \ a_2^{[1](2)} \ ... \\ 
-  a_3^{[1](1)} \ a_3^{[1](2)} \ ... \\ 
-  a_4^{[1](1)} \ a_4^{[1](2)} \ ... \\ 
+  a_1^{[1](1)} \ ... \ a_1^{[1](m)} \\ 
+  a_2^{[1](1)} \ ... \ a_2^{[1](m)} \\ 
+  a_3^{[1](1)} \ ... \ a_3^{[1](m)} \\ 
+  a_4^{[1](1)} \ ... \ a_4^{[1](m)} \\ 
 \end{bmatrix} 
 = \sigma\left(
 \begin{bmatrix} 
@@ -156,9 +168,9 @@ $$
   w_{4,1}^{[1]} \ w_{4,2}^{[1]} \ w_{4,3}^{[1]} \\ 
 \end{bmatrix}
 \begin{bmatrix} 
-  x^{(1)}_1 \ x^{(2)}_1 \ ... \\ 
-  x^{(1)}_2 \ x^{(2)}_2 \ ... \\ 
-  x^{(1)}_3 \ x^{(2)}_3 \ ... \\ 
+  x^{(1)}_1 \ ... \ x^{(m)}_1 \\ 
+  x^{(1)}_2 \ ... \ x^{(m)}_2 \\ 
+  x^{(1)}_3 \ ... \ x^{(m)}_3 \\ 
 \end{bmatrix}
 + \begin{bmatrix} 
   b_1^{[1]} \\
@@ -171,34 +183,142 @@ $$
 
 ##### Output layer {-}
 
-Single node.
+Single node ($n^{[2]}=1$).
 
-$$\mathbf{a}^{[2]} = \sigma(\mathbf{z}^{[2]}) = \sigma(\mathbf{w}^{T[2]}\mathbf{a}^{[1]} + b^{[2]})$$
+$$\mathbf{a}^{[2]} = \sigma(\mathbf{z}^{[2]}) = \sigma(\mathbf{W}^{[2]}\mathbf{a}^{[1]} + b^{[2]})=\widehat{\mathbf{y}}$$
 equivalently, 
 
 $$
 \begin{bmatrix} 
-  a_1^{[2](1)} \ a_1^{[2](2)} \ ... \\
+  a_1^{[2](1)} \ ... \ a_1^{[2](m)} \\
 \end{bmatrix} 
 = \sigma\left(
 \begin{bmatrix} 
   w_{1, 1}^{[2]} \  w_{1, 2}^{[2]} \ w_{1, 3}^{[2]} \ w_{1, 4}^{[2]} \\
 \end{bmatrix} 
 \begin{bmatrix} 
-  a_1^{[1](1)} \ a_1^{[1](2)} \ ... \\ 
-  a_2^{[1](1)} \ a_2^{[1](2)} \ ... \\ 
-  a_3^{[1](1)} \ a_3^{[1](2)} \ ... \\ 
-  a_4^{[1](1)} \ a_4^{[1](2)} \ ... \\ 
+  a_1^{[1](1)} \ ... \ a_1^{[1](m)} \\ 
+  a_2^{[1](1)} \ ... \ a_2^{[1](m)} \\ 
+  a_3^{[1](1)} \ ... \ a_3^{[1](m)} \\ 
+  a_4^{[1](1)} \ ... \ a_4^{[1](m)} \\ 
 \end{bmatrix} 
   + b_1^{[2]}
 \right)
+=\begin{bmatrix} 
+  \hat{y}^{(1)} \ ... \ \hat{y}^{(m)} \\
+\end{bmatrix} 
 $$
+
+### Activation functions
+
+$\tanh(z)$ generally preferred to $\sigma(z)$ since it outputs (-1, 1) rather than (0, 1) - although $\sigma(z)$ might still be preferred for the output layer if probabilities are required.
+
+ReLU (rectified linear unit) preferred to both of the above since it doesn't suffer from having regions of low gradient and can therefore lead to faster convergence.
+
+#### Derivative of sigmoid {-}
+
+$$
+g(z) = \frac{1}{1+\exp(-z)}
+$$
+
+$$
+g^\prime(z)
+= 
+\frac{1}{1+\exp(-z)}\left(1-\frac{1}{1+\exp(-z)}\right) 
+= 
+g(z)\left[1-g(z)\right]
+$$
+
+#### Derivative of tanh {-}
+
+$$
+g(z) = \tanh(z)
+$$
+
+$$
+g^\prime(z)
+= 
+1 - \left[\tanh(z)\right]^2
+$$
+
+#### Derivative of ReLU {-}
+
+$$
+g(z) = \max(0, z)
+$$
+
+$$
+g^\prime(z)
+= 
+\begin{cases}
+0 \ \text{if} \; z < 0 \\
+1 \ \text{if} \; z \geq 0 \\
+\end{cases}
+$$
+
+
+### Gradient descent
+
+#### Parameters {-}
+
+$$
+\begin{array}{l}
+\mathbf{W}^{[1]} & (n^{[1]}, \; n^{[0]}) \\
+\mathbf{b}^{[1]} & (n^{[1]}, \; 1) \\  
+\mathbf{W}^{[2]} & (n^{[2]}, \; n^{[2]}) \\
+\mathbf{b}^{[2]} & (n^{[2]}, \; 1) \\  
+\end{array}
+$$
+
+#### Cost function {-}
+
+$$
+J(\mathbf{W}^{[1]}, \mathbf{b}^{[1]}, \mathbf{W}^{[2]}, \mathbf{b}^{[2]}) = 
+\frac{1}{m} \sum_{i=1}^m{loss(\hat{y}_i, y_i)}
+$$
+
+#### Gradient descent algorithm {-}
+
+* compute $\hat{y}_i$ for all $i$
+
+* compute partial derivatives
+
+$$
+\begin{array}{l}
+d\mathbf{W}^{[1]} &= \frac{\partial J}{\partial \mathbf{W}^{[1]}} \\
+d\mathbf{b}^{[1]} &= \frac{\partial J}{\partial \mathbf{b}^{[1]}} \\
+d\mathbf{W}^{[2]} &= \frac{\partial J}{\partial \mathbf{W}^{[2]}} \\
+d\mathbf{b}^{[2]} &= \frac{\partial J}{\partial \mathbf{b}^{[2]}} \\
+\end{array}
+$$
+
+* update parameters
+
+$$
+\begin{array}{l}
+\mathbf{W}^{[1]} &:= \mathbf{W}^{[1]} - \alpha \; d\mathbf{W}^{[1]} \\
+\mathbf{b}^{[1]} &:= \mathbf{b}^{[1]} - \alpha \; d\mathbf{b}^{[1]} \\
+\mathbf{W}^{[2]} &:= \mathbf{W}^{[2]} - \alpha \; d\mathbf{W}^{[2]} \\
+\mathbf{b}^{[2]} &:= \mathbf{b}^{[2]} - \alpha \; d\mathbf{b}^{[2]} \\
+\end{array}
+$$
+
+* repeat until convergence
+
+
+***
 
 ## Improving Deep Neural Networks: Hyperparameter Tuning, Regularization and Optimization
 
+***
+
 ## Structuring Machine Learning Projects
 
+***
+
 ## Convolutional Neural Networks
+
+***
 
 ## Sequence Models
 
