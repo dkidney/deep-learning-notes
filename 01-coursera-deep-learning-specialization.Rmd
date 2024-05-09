@@ -7,25 +7,79 @@
 [Activation functions]  
 [Gradient descent]
 
+### Links {-}
+
+https://dennybritz.com/posts/wildml/implementing-a-neural-network-from-scratch/
+
+
 ### Logistic regression
 
-#### Traditional model formulation {-}
+#### Traditional formulation using logit link {-}
 
-Link function (logit):
-$$\log\left(\frac{p_i}{1-p_i}\right) = b + w_1x_{i1} + w_2x_{i2} + ...  = z_i$$
-where, $p_i=p(y_i=1)$
+##### Link function {-}
+$$\log\left(\frac{a_i}{1-a_i}\right) = w_1x_{i1} + w_2x_{i2} + ... + b = z_i$$
+where, $a_i = p(y_i = 1\;|\;\mathbf{x}_i)$
 
-Inverse link function:
-$$p_i=p(y_i=1\;|\;X_i)=\sigma(z_i)=\frac{\exp(z_i)}{1+\exp(z_i)}=\frac{1}{1+\exp(-z_i)}$$
-Likelihood (using $p(y_i)$ for brevity instead of $p(y_i\;|\;X_i)$):
-$$L(\mathbf{\beta}\;|\;\mathbf{X})=\prod_ip(y_i)=\prod_ip(y_i=1)^{y_i}p(y_i=0)^{(1-y_i)}$$
-Log-likelihood:
-$$\ell(\mathbf{\beta}\;|\;\mathbf{X})=\log\left[\prod_ip(y_i=1)^{y_i}\ast p(y_i=0)^{(1-y_i)}\right]$$
-$$=\sum_i\log\left[p(y_i=1)^{y_i}\ast p(y_i=0)^{(1-y_i)}\right]$$
-$$=\sum_i\log\left[p(y_i=1)^{y_i}\right)+\log\left[p(y_i=0)^{(1-y_i)}\right)$$
-$$=\sum_iy_i\log\left[p(y_i=1)\right]+(1-y_i)\log\left[p(y_i=0)\right]$$
-<!-- $$=\sum_iy_i\log\left[p(y_i=1)\right]+\log\left[p(y_i=0)\right]-y_i\log\left[p(y_i=0)\right]$$ -->
-<!-- $$=\sum_iy_i\left(\log\left[p(y_i=1)\right]-\log\left[p(y_i=0)\right]\right)+\log\left[p(y_i=0)\right]$$ -->
+##### Inverse link function {-}
+$$a_i = \sigma(z_i) = \frac{\exp(z_i)}{1+\exp(z_i)} = \frac{1}{1+\exp(-z_i)}$$
+
+##### Likelihood {-}
+$$L(\mathbf{w}, b\;|\;\mathbf{X}) = \prod_ip(y_i)$$
+$$= \prod_ip(y_i = 1\;|\;\mathbf{x}_i)^{y_i}p(y_i = 0\;|\;\mathbf{x}_i)^{(1-y_i)}$$
+$$= \prod_ia_i^{y_i}(1-a_i)^{(1-y_i)}$$
+
+##### Negative log-likelihood {-}
+$$-\ell(\mathbf{w}, b\;|\;\mathbf{X}) = -\log\left[\prod_ia_i^{y_i} (1-a_i)^{(1-y_i)}\right]$$
+$$= -\sum_i\log\left[a_i^{y_i} (1-a_i)^{(1-y_i)}\right]$$
+$$= -\sum_i\log\left(a_i^{y_i}\right)+\log\left((1-a_i)^{(1-y_i)}\right)$$
+$$= -\sum_iy_i\log\left(a_i\right)+(1-y_i)\log\left(1-a_i\right)$$
+<!-- $$= \sum_iy_i\log\left[p(y_i = 1)\right]+\log\left[p(y_i = 0)\right]-y_i\log\left[p(y_i = 0)\right]$$ -->
+<!-- $$= \sum_iy_i\left(\log\left[p(y_i = 1)\right]-\log\left[p(y_i = 0)\right]\right)+\log\left[p(y_i = 0)\right]$$ -->
+
+##### Loss {-}
+Changing the notation for $i$ slightly to be more consistent with later sections.
+$$\mathcal{L}(a^{(i)}, y^{(i)})=-y^{(i)}\log(a^{(i)})+(1-y^{(i)})\log(1-a^{(i)})$$
+
+##### Cost {-}
+$$\mathcal{J}(\mathbf{w}, b)=\frac{1}{m}\sum_i\mathcal{L}(a^{(i)}, y^{(i)})$$
+where,  
+$a^{(i)}=\hat{y}^{(i)}=\sigma(\mathbf{w}^T\mathbf{x}^{(i)}+b)$
+
+#### Derivatives {-}
+
+##### Equations {-}
+
+$\mathcal{L} = -y\log\left(a\right)-(1-y)\log\left(1-a\right)$
+
+$a = \sigma(z)$
+
+$z = w_1x_1 + w_2x_2 + ... + b$
+
+##### Derivatives (using sigmoid inverse link) {-}
+
+$\frac{d\mathcal{L}}{dw_1} = \frac{dz}{dw_1} \cdot \frac{da}{dz} \cdot \frac{d\mathcal{L}}{da} = \frac{dz}{dw_1} \cdot \frac{d\mathcal{L}}{dz} = x_1 \cdot \frac{d\mathcal{L}}{dz} = x_1 (a-y)$
+
+$\frac{d\mathcal{L}}{dw_2} = \frac{dz}{dw_2} \cdot \frac{da}{dz} \cdot \frac{d\mathcal{L}}{da} = \frac{dz}{dw_2} \cdot \frac{d\mathcal{L}}{dz} = x_2 \cdot \frac{d\mathcal{L}}{dz} = x_2 (a-y)$
+
+$\frac{d\mathcal{L}}{db} = \frac{dz}{db} \cdot \frac{da}{dz} \cdot \frac{d\mathcal{L}}{da} = \frac{dz}{db} \cdot \frac{d\mathcal{L}}{dz} = 1 \cdot \frac{d\mathcal{L}}{dz} = (a-y)$
+
+where,
+
+$\frac{d\mathcal{L}}{dz} = \frac{d\mathcal{L}}{da} \cdot \frac{da}{dz} = \left[-\frac{y}{a}+\frac{1-y}{1-a}\right] \cdot \left[-a(1-a)\right] = a-y$
+
+and where,
+
+$\frac{d\mathcal{L}}{da} = -\frac{y}{a}+\frac{1-y}{1-a}$
+
+$\frac{da}{dz} = -a(1-a)$
+
+#### Gradient descent {-}
+
+$\frac{\partial \mathcal{J}}{\partial w_1} = \frac{1}{m} \sum_i \frac{\partial \mathcal{L}^{(i)}}{\partial w_1}$
+
+$\frac{\partial \mathcal{J}}{\partial w_2} = \frac{1}{m} \sum_i \frac{\partial \mathcal{L}^{(i)}}{\partial w_2}$
+
+$\frac{\partial \mathcal{J}}{\partial b} = \frac{1}{m} \sum_i \frac{\partial \mathcal{L}^{(i)}}{\partial b}$
 
 ### Single layer neural network
 
@@ -33,29 +87,41 @@ A single hidden layer neural network is like logistic regression, but repeated a
 
 #### Notation {-}
 
-$\mathbf{x}^{(i)}$ = vector of input feature values for the $i$th training example
+$m$ : number of training exanmples
 
-$x_p^{(i)}$ = value of input feature $p$ for the $i$th training example $i$
+$n^{[k]}$ : number of nodes in layer $k$ (where $k=0$ indiwcates the input layer)
 
-$\mathbf{W}^{[k]}$ = matrix of weight values for layer $k$
+$\mathbf{W}^{[k]}$ : a ($n^{[k]}$, $n^{[1-k]}$) matrix of weights for layer $k$
 
-$\mathbf{w}_j^{[k]}$ = vector of weight values for layer $k$ node $j$
+$\mathbf{w}_j^{[k]}$ : a (1, $n^{[1-k]}$) matrix of weights for layer $k$ node $j$
 
-$w_{j, p}^{[k]}$ = value of weight for feature $p$ for layer $k$ node $j$
+$\mathbf{b}^{[k]}$ : a (..., ...) matrix ....
 
-$\mathbf{a}^{[k]}$ = activations for layer $k$ 
+$\mathbf{A}^{[k]}$ : a ($n^{[k]}$, $m$) matrix of activations for layer $k$ (where $\mathbf{A}^{[0]}$ = $\mathbf{X}$)
 
-$\mathbf{a}_{j}^{[k]}$ = activations for layer $k$ node $j$ 
 
-$a_{j}^{[k](i)}$ = activation for the $i$th training example for node $j$ layer $k$
 
-$n^{[k]}$ = number of nodes in layer $k$
+
+$\mathbf{x}^{(i)}$= vector of input feature values for the $i$th training example
+
+$x_p^{(i)}$= value of input feature $p$ for the $i$th training example $i$
+
+
+$w_{j, p}^{[k]}$= value of weight for feature $p$ for layer $k$ node $j$
+
+$\mathbf{a}^{[k]}$= activations for layer $k$ 
+
+$\mathbf{a}_{j}^{[k]}$= activations for layer $k$ node $j$ 
+
+$a_{j}^{[k](i)}$= activation for the $i$th training example for node $j$ layer $k$
+
+$n^{[k]}$= number of nodes in layer $k$
 
 #### Formulation {-}
 
 ##### Input layer {-}
 
-E.g. three nodes - one node per input feature ($n^{[0]}=3$).
+E.g. three nodes - one node per input feature ($n^{[0]} = 3$).
 
 $$
 \mathbf{a}^{[0]} = \mathbf{X} 
@@ -69,7 +135,7 @@ $$
   \mathbf{a}_2^{[0]} \\ 
   \mathbf{a}_3^{[0]} 
 \end{bmatrix}
-= 
+ = 
 \begin{bmatrix} 
   \mathbf{x}_1 \\ 
   \mathbf{x}_2 \\ 
@@ -83,7 +149,7 @@ $$
   a^{[0](1)}_2 \ ... \ a^{[0](m)}_2 \\ 
   a^{[0](1)}_3 \ ... \ a^{[0](m)}_3 \\ 
 \end{bmatrix}
-=
+ = 
 \begin{bmatrix} 
   x^{(1)}_1 \ ... x^{(m)}_1 \\ 
   x^{(1)}_2 \ ... x^{(m)}_2 \\ 
@@ -93,7 +159,7 @@ $$
 
 ##### Hidden layer {-}
 
-E.g. four nodes ($n^{[1]}=4$).
+E.g. four nodes ($n^{[1]} = 4$).
 
 $$\mathbf{a}^{[1]} = \sigma(\mathbf{z}^{[1]}) = \sigma(\mathbf{W}^{[1]}\mathbf{x} + \mathbf{b}^{[1]})$$
 
@@ -112,7 +178,7 @@ $$
   \mathbf{a}_3^{[1]} \\ 
   \mathbf{a}_4^{[1]} 
 \end{bmatrix} 
-= 
+ = 
 \sigma\left(
 \begin{bmatrix} 
   \mathbf{z}_1^{[1]} \\ 
@@ -130,7 +196,7 @@ $$
   \mathbf{a}_3^{[1]} \\ 
   \mathbf{a}_4^{[1]} 
 \end{bmatrix} 
-= 
+ = 
 \sigma\left(
 \begin{bmatrix} 
   \mathbf{w}_1^{[1]} \\ 
@@ -160,7 +226,7 @@ $$
   a_3^{[1](1)} \ ... \ a_3^{[1](m)} \\ 
   a_4^{[1](1)} \ ... \ a_4^{[1](m)} \\ 
 \end{bmatrix} 
-= \sigma\left(
+ = \sigma\left(
 \begin{bmatrix} 
   w_{1,1}^{[1]} \ w_{1,2}^{[1]} \ w_{1,3}^{[1]} \\ 
   w_{2,1}^{[1]} \ w_{2,2}^{[1]} \ w_{2,3}^{[1]} \\ 
@@ -183,16 +249,16 @@ $$
 
 ##### Output layer {-}
 
-Single node ($n^{[2]}=1$).
+Single node ($n^{[2]} = 1$).
 
-$$\mathbf{a}^{[2]} = \sigma(\mathbf{z}^{[2]}) = \sigma(\mathbf{W}^{[2]}\mathbf{a}^{[1]} + b^{[2]})=\widehat{\mathbf{y}}$$
+$$\mathbf{a}^{[2]} = \sigma(\mathbf{z}^{[2]}) = \sigma(\mathbf{W}^{[2]}\mathbf{a}^{[1]} + b^{[2]}) = \widehat{\mathbf{y}}$$
 equivalently, 
 
 $$
 \begin{bmatrix} 
   a_1^{[2](1)} \ ... \ a_1^{[2](m)} \\
 \end{bmatrix} 
-= \sigma\left(
+ = \sigma\left(
 \begin{bmatrix} 
   w_{1, 1}^{[2]} \  w_{1, 2}^{[2]} \ w_{1, 3}^{[2]} \ w_{1, 4}^{[2]} \\
 \end{bmatrix} 
@@ -204,7 +270,7 @@ $$
 \end{bmatrix} 
   + b_1^{[2]}
 \right)
-=\begin{bmatrix} 
+ = \begin{bmatrix} 
   \hat{y}^{(1)} \ ... \ \hat{y}^{(m)} \\
 \end{bmatrix} 
 $$
@@ -223,9 +289,9 @@ $$
 
 $$
 g^\prime(z)
-= 
+ = 
 \frac{1}{1+\exp(-z)}\left(1-\frac{1}{1+\exp(-z)}\right) 
-= 
+ = 
 g(z)\left[1-g(z)\right]
 $$
 
@@ -237,7 +303,7 @@ $$
 
 $$
 g^\prime(z)
-= 
+ = 
 1 - \left[\tanh(z)\right]^2
 $$
 
@@ -249,7 +315,7 @@ $$
 
 $$
 g^\prime(z)
-= 
+ = 
 \begin{cases}
 0 \ \text{if} \; z < 0 \\
 1 \ \text{if} \; z \geq 0 \\
@@ -274,8 +340,15 @@ $$
 
 $$
 J(\mathbf{W}^{[1]}, \mathbf{b}^{[1]}, \mathbf{W}^{[2]}, \mathbf{b}^{[2]}) = 
-\frac{1}{m} \sum_{i=1}^m{loss(\hat{y}_i, y_i)}
+\frac{1}{m} \sum_{i = 1}^m{loss(\hat{y}_i, y_i)}
 $$
+
+#### Partial derivatives {-}
+
+
+
+
+
 
 #### Gradient descent algorithm {-}
 
@@ -285,10 +358,10 @@ $$
 
 $$
 \begin{array}{l}
-d\mathbf{W}^{[1]} &= \frac{\partial J}{\partial \mathbf{W}^{[1]}} \\
-d\mathbf{b}^{[1]} &= \frac{\partial J}{\partial \mathbf{b}^{[1]}} \\
-d\mathbf{W}^{[2]} &= \frac{\partial J}{\partial \mathbf{W}^{[2]}} \\
-d\mathbf{b}^{[2]} &= \frac{\partial J}{\partial \mathbf{b}^{[2]}} \\
+d\mathbf{W}^{[1]} & = \frac{\partial J}{\partial \mathbf{W}^{[1]}} \\
+d\mathbf{b}^{[1]} & = \frac{\partial J}{\partial \mathbf{b}^{[1]}} \\
+d\mathbf{W}^{[2]} & = \frac{\partial J}{\partial \mathbf{W}^{[2]}} \\
+d\mathbf{b}^{[2]} & = \frac{\partial J}{\partial \mathbf{b}^{[2]}} \\
 \end{array}
 $$
 
@@ -296,14 +369,43 @@ $$
 
 $$
 \begin{array}{l}
-\mathbf{W}^{[1]} &:= \mathbf{W}^{[1]} - \alpha \; d\mathbf{W}^{[1]} \\
-\mathbf{b}^{[1]} &:= \mathbf{b}^{[1]} - \alpha \; d\mathbf{b}^{[1]} \\
-\mathbf{W}^{[2]} &:= \mathbf{W}^{[2]} - \alpha \; d\mathbf{W}^{[2]} \\
-\mathbf{b}^{[2]} &:= \mathbf{b}^{[2]} - \alpha \; d\mathbf{b}^{[2]} \\
+\mathbf{W}^{[1]} &: = \mathbf{W}^{[1]} - \alpha \; d\mathbf{W}^{[1]} \\
+\mathbf{b}^{[1]} &: = \mathbf{b}^{[1]} - \alpha \; d\mathbf{b}^{[1]} \\
+\mathbf{W}^{[2]} &: = \mathbf{W}^{[2]} - \alpha \; d\mathbf{W}^{[2]} \\
+\mathbf{b}^{[2]} &: = \mathbf{b}^{[2]} - \alpha \; d\mathbf{b}^{[2]} \\
 \end{array}
 $$
-
 * repeat until convergence
+
+##### python implementaion 
+
+```python
+import numpy as np
+
+def sigmoid(x):
+  return 1 / (1 + np.exp(-x))
+  
+m = 1000
+nx = 3
+x = np.random.rand(nx, m)
+y = np.random.randint(2, size=(m, 1))
+```
+
+Non-vectorized
+```python
+```
+
+Vectorized
+```python
+w = np.zeros((4, nx))
+b = np.zeros((4, 1))
+
+z = np.dot(w, x) + b
+a = sigmoid(z)
+dz = a - y
+dw = x * dz.T / m
+db = np.sum(dz) / m
+```
 
 
 ***
