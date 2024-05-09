@@ -40,7 +40,7 @@ pred_data = with(train_df, tibble(
   tidyr::expand(x1, x2)
 lr_probs = predict(lr, pred_data, type='response')
 lr_preds = as.integer(lr_probs > 0.5)
-with(pred_data, points(x=x1, y=x2, col=lr_preds + 1, cex=0.2, pch=15))
+with(pred_data, points(x=x1, y=x2, col=lr_preds + 1, cex=0.3, pch=15))
 
 
 # activation functions ---------------------------------------------------------
@@ -57,28 +57,63 @@ tanh_prime = function(x) {
 }
 
 relu = function(x) {
-  max(0, x)
+  y = x
+  i = y < 0
+  y[i] = 0
+  y
 }
 
 relu_prime = function(x) {
-  if (x < 0) return(0)
-  1
+  y = x
+  i = y < 0
+  y[i] = 0
+  y[!i] = 1
+  y
 }
 
 leaky_relu = function(x) {
-  max(0.01 * x, x)
+  # max(0.01 * x, x)
+  # if (x < 0.01 * x) 0.01 * x else x
+  y = x
+  i = y < 0.01 * y
+  y[i] = 0.01 * y[i]
+  y
 }
 
 leaky_relu_prime = function(x) {
-  if (x < 0.01) return(0)
-  1
+  # if (x < 0) 0.01 else 1
+  y = x
+  i = y < 0
+  y[i] = 0.01
+  y[!i] = 1
+  y
 }
 
-forward_propagation = function(X, W1, b1, W2, b2, g) {
+g = function(activation_function) {
+  activation_function %>%
+    switch(
+      'sigmoid' = sigmoid,
+      'tanh' = tanh,
+      'relu' = relu,
+      'leaky_relu' = leaky_relu
+    )
+}
+
+g_prime = function(activation_function) {
+  activation_function %>%
+    switch(
+      'sigmoid' = sigmoid_prime,
+      'tanh' = tanh_prime,
+      'relu' = relu_prime,
+      'leaky_relu' = leaky_relu_prime
+    )
+}
+
+forward_propagation = function(X, W1, b1, W2, b2, activation_function) {
   Z1 = cbind(b1, W1) %*% rbind(1, X)
-  A1 = g(Z1)
+  A1 = g(activation_function)(Z1)
   Z2 = cbind(b2, W2) %*% rbind(1, A1)
-  A2 = g(Z2)
+  A2 = sigmoid(Z2)
   # if (n2 > 1) {
   #   A2 = apply(A2, 2, function(x) x / sum(x))
   # }
@@ -90,12 +125,12 @@ forward_propagation = function(X, W1, b1, W2, b2, g) {
   ))
 }
 
-back_propagation = function(X, Y, Z1, A1, W2, Z2, A2, g_prime) {
+back_propagation = function(X, Y, Z1, A1, W2, Z2, A2, activation_function) {
   m = nrow(X)
   dZ2 = A2 - Y
   dW2 = dZ2 %*% t(A1) / m
   db2 = sum(dZ2) / m
-  dZ1 = t(W2) %*% dZ2 * g_prime(Z1)
+  dZ1 = t(W2) %*% dZ2 * g_prime(activation_function)(Z1)
   dW1 = dZ1 %*% t(X)
   db1 = sum(dZ1) / m
   return(list(
@@ -113,34 +148,24 @@ make_predictions = function(model, X) {
     b1 = model[['b1']],
     W2 = model[['W2']],
     b2 = model[['b2']],
-    g = model[['g']]
+    activation_function = model[['activation_function']]
   )[['A2']]
   as.integer(probs > 0.5)
 }
 
 build_model = function(x_train, y_train, x_test, y_test, n_hidden_nodes,
                        activation_function = 'sigmoid',
-                       alpha= 0.05, n_iterations=100,
+                       alpha= 0.05, max_iterations=100, min_improvement=0.00001,
                        print_metrics=FALSE) {
 
   if (0) {
     n_hidden_nodes = 5
     activation_function = 'sigmoid'
     alpha = 0.05
-    n_iterations=10
+    max_iterations=10
+    min_improvement=0.01
     print_metrics=TRUE
   }
-
-  if (activation_function == 'sigmoid') {
-    g = sigmoid
-    g_prime = sigmoid_prime
-  } else if (activation_function == 'tanh') {
-    g = tanh
-    g_prime = tanh_prime
-  } else if (activation_function == 'relu') {
-    g = relu
-    g_prime = relu_prime
-  } else stop("invalid activation_function: '", activation_function, "'")
 
   m = nrow(x_train)
   n0 = ncol(x_train)
@@ -166,12 +191,14 @@ build_model = function(x_train, y_train, x_test, y_test, n_hidden_nodes,
   stopifnot(dim(W2) == c(n2, n1))
   stopifnot(dim(b2) == c(n2, 1))
 
-  cost = rep(NA, n_iterations)
+  cost = rep(NA, max_iterations)
+  delta_cost = rep(NA, max_iterations)
+
   # gradient descent -----------------------------------------------------------
-  for (i in 1:n_iterations) { # i=1
+  for (i in 1:max_iterations) { # i=1
 
     # forward propagation
-    fprop = forward_propagation(X_train, W1, b1, W2, b2, g)
+    fprop = forward_propagation(X_train, W1, b1, W2, b2, activation_function)
     Z1 = fprop[['Z1']]
     A1 = fprop[['A1']]
     Z2 = fprop[['Z2']]
@@ -183,7 +210,7 @@ build_model = function(x_train, y_train, x_test, y_test, n_hidden_nodes,
     stopifnot(dim(A2) == dim(Z2))
 
     # back propagation
-    bprop = back_propagation(X_train, Y_train, Z1, A1, W2, Z2, A2, g_prime)
+    bprop = back_propagation(X_train, Y_train, Z1, A1, W2, Z2, A2, activation_function)
     dW1 = bprop[['dW1']]
     db1 = bprop[['db1']]
     dW2 = bprop[['dW2']]
@@ -199,16 +226,30 @@ build_model = function(x_train, y_train, x_test, y_test, n_hidden_nodes,
     # dW2 += reg_lambda * W2
     # dW1 += reg_lambda * W1
 
-    cost[i] = -sum(Y_train * log(A2) + (1 - Y_train) * log(1 - A2)) / m
-
     # gradient descent parameter update
     W1 = W1 - alpha * dW1
     b1 = b1 - alpha * db1
     W2 = W2 - alpha * dW2
     b2 = b2 - alpha * db2
 
-    if (print_metrics & (i %% 1000 == 0)) {
-      print(str_glue("Cost after iteration {i}: {cost[i]}"))
+    cost[i] = -sum(Y_train * log(A2) + (1 - Y_train) * log(1 - A2)) / m
+
+    delta_cost[i] = if (i > 1) cost[i] - cost[i-1] else NA
+
+    if (print_metrics & (i %% 100 == 0)) {
+      print(str_glue("Cost after iteration {i}: {round(cost[i], 5)} (delta: {round(delta_cost[i], 5)})"))
+    }
+
+    if (i == max_iterations) {
+      print(str_glue('stopping at iteration {i}: max iterations ({max_iterations}) reached'))
+      break
+    }
+
+    if (i > 1000) {
+      if (delta_cost[i] > -min_improvement) {
+        print(str_glue('stopping at iteration {i}: delta cost ({delta_cost[i]}) > -min_improvement (-{min_improvement})'))
+        break
+      }
     }
 
   }
@@ -218,10 +259,9 @@ build_model = function(x_train, y_train, x_test, y_test, n_hidden_nodes,
     'b1' = b1,
     'W2' = W2,
     'b2' = b2,
-    g = g,
-    g_prime = g_prime,
-    cost = cost,
-    n_iterations=n_iterations,
+    cost = cost[1:i],
+    delta_cost = delta_cost[1:i],
+    max_iterations=max_iterations,
     activation_function=activation_function,
     alpha=alpha,
     n_hidden_nodes=n_hidden_nodes
@@ -241,25 +281,34 @@ build_model = function(x_train, y_train, x_test, y_test, n_hidden_nodes,
 
 }
 
+# debugonce(tanh)
+# debugonce(tanh_prime)
+# debugonce(build_model)
+
 set.seed(42)
 nn = build_model(
   x_train=x_train,
   y_train=y_train,
   x_test=x_test,
   y_test=y_test,
-  n_hidden_nodes=4,
-  activation_function='sigmoid',
-  alpha=0.01,
-  n_iterations=10000,
+  n_hidden_nodes=10,
+  # activation_function='sigmoid',
+  # activation_function='tanh',
+  # activation_function='relu',
+  activation_function='leaky_relu',
+  alpha=0.001,
+  max_iterations=10000,
   print_metrics=TRUE
 )
 
-# debugonce(back_propagation)
-
-# with(nn, plot(seq_along(cost), cost, type='l', main='cost'))
+with(nn, plot(seq_along(cost), cost, type='l', main='cost'))
 
 nn_preds = make_predictions(nn, t(as.matrix(pred_data)))
-title = with(nn, str_glue('NN: {n_iterations} iters, {activation_function}, alpha {alpha}, {n_hidden_nodes} hidden nodes'))
+title = with(nn, str_glue('NN: {max_iterations} iters, {activation_function}, alpha {alpha}, {n_hidden_nodes} hidden nodes'))
 with(train_df, plot(x1, x2, col=y + 1, pch=19, asp=1, main=title))
-with(pred_data, points(x=x1, y=x2, col=(as.numeric(nn_preds) > 0.5) + 1, cex=0.2, pch=15))
+with(pred_data, points(x=x1, y=x2, col=(as.numeric(nn_preds) > 0.5) + 1, cex=0.3, pch=15))
+
+print(head(cbind(cost=nn[['cost']], delta=nn[['delta_cost']])))
+print(tail(cbind(cost=nn[['cost']], delta=nn[['delta_cost']])))
+
 
