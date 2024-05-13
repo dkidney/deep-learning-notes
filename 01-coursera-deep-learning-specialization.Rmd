@@ -11,6 +11,8 @@
 
 https://dennybritz.com/posts/wildml/implementing-a-neural-network-from-scratch/
 
+https://community.deeplearning.ai/t/dls-course-1-lecture-notes/11862
+
 
 ### Logistic regression
 
