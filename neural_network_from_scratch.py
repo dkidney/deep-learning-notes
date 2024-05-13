@@ -1,4 +1,4 @@
-import copy
+from copy import deepcopy
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -6,104 +6,232 @@ import pandas as pd
 from sklearn.datasets import make_moons
 
 
+def sigmoid(x):
+	y = deepcopy(x)
+	return 1 / (1 + np.exp(-y))
+
+
+def sigmoid_prime(x):
+	y = sigmoid(x)
+	return y * (1 - y)
+
+
+def tanh(x):
+	y = deepcopy(x)
+	return np.tan(y)
+
+
+def tanh_prime(y):
+	return 1 - tanh(y) ** 2
+
+
+def relu(x):
+	y = deepcopy(x)
+	i = y < 0
+	y[i] = 0
+	return y
+
+
+def relu_prime(x):
+	y = deepcopy(x)
+	i = y < 0
+	y[i] = 0
+	y[~i] = 1
+	return y
+
+
+def leaky_relu(x):
+	y = deepcopy(x)
+	i = y < 0.01 * y
+	y[i] = 0.01 * y[i]
+	return y
+
+
+def leaky_relu_prime(x):
+	y = deepcopy(x)
+	i = y < 0
+	y[i] = 0.01
+	y[~i] = 1
+	return y
+
+
 class NN:
 	def __init__(
-		self,
-		x_train,
-		y_train,
-		x_test,
-		y_test,
-		n_hidden_nodes=3,
-		activation_function='sigmoid',
-		alpha=0.01,
-		max_iterations=10000,
-		print_metrics=True
+			self,
+			x_train,
+			y_train,
+			x_test,
+			y_test,
 	):
-		self.x_train = x_train
-		self.y_train = y_train
-		self.x_test = x_test
-		self.y_test = y_test
-		self.activation_function = activation_function
-		self.alpha = alpha
-		self.max_iterations = max_iterations
-		self.print_metrics = print_metrics
-		self.m = x_train.shape[1]
-		self.n0 = x_train.shape[0]
-		self.n1 = n_hidden_nodes
-		self.n2 = 1
+		self.X_train = x_train
+		self.Y_train = y_train
+		self.X_test = x_test
+		self.Y_test = y_test
 
-		assert self.x_train.shape == (self.n0, self.m)
-		assert self.y_train.shape == (1, self.m)
-		assert self.activation_function in ['sigmoid', 'tanh', 'relu', 'leaky_relu']
-
-	@staticmethod
-	def sigmoid(z):
-		return 1 / (1 + np.exp(-z))
-
-	@staticmethod
-	def relu(z):
-		assert NotImplementedError
-
-	@staticmethod
-	def leaky_relu(z):
-		assert NotImplementedError
+		self.m = None
+		self.n0 = None
+		self.n1 = None
+		self.n2 = None
+		self.W1 = None
+		self.b1 = None
+		self.W2 = None
+		self.b2 = None
+		self.Z1 = None
+		self.A1 = None
+		self.Z2 = None
+		self.A2 = None
+		self.dZ2 = None
+		self.dW2 = None
+		self.db2 = None
+		self.dZ1 = None
+		self.dW1 = None
+		self.db1 = None
+		self.g = None
+		self.g_prime = None
+		self.cost = None
+		self.delta_cost = None
+		self.Y_hat_train = None
+		self.Y_hat_test = None
+		self.alpha = None
+		self.max_iterations = None
+		# self.min_improvement = None
+		self.activation_function = None
 
 	def set_g(self):
 		if self.activation_function == 'sigmoid':
-			self.g = self.sigmoid
+			self.g = sigmoid
 		elif self.activation_function == 'tanh':
 			self.g = np.tanh
 		elif self.activation_function == 'relu':
-			self.g = self.relu
+			self.g = relu
 		elif self.activation_function == 'leaky_relu':
-			self.g = self.leaky_relu
-
-	@staticmethod
-	def sigmoid_prime(z):
-		assert NotImplementedError
-
-	@staticmethod
-	def tanh_prime(z):
-		assert NotImplementedError
-
-	@staticmethod
-	def relu_prime(z):
-		assert NotImplementedError
-
-	@staticmethod
-	def leaky_relu_prime(z):
-		assert NotImplementedError
+			self.g = leaky_relu
 
 	def set_g_prime(self):
 		if self.activation_function == 'sigmoid':
-			self.g_prime = self.sigmoid_prime
+			self.g_prime = sigmoid_prime
 		elif self.activation_function == 'tanh':
-			self.g_prime = self.tanh_prime
+			self.g_prime = tanh_prime
 		elif self.activation_function == 'relu':
-			self.g_prime = self.relu_prime
+			self.g_prime = relu_prime
 		elif self.activation_function == 'leaky_relu':
-			self.g_prime = self.leaky_relu_prime
+			self.g_prime = leaky_relu_prime
 
 	def initialize_params(self):
-		self.W1 = np.random.randn((self.n1, self.n0))
-		self.b1 = np.random.randn((self.n1, 1))
-		self.W2 = np.random.randn((self.n2, self.n1))
-		self.b2 = np.random.randn((self.n2, 1))
+		self.W1 = np.random.randn(self.n1, self.n0)
+		self.b1 = np.random.randn(self.n1, 1)
+		self.W2 = np.random.randn(self.n2, self.n1)
+		self.b2 = np.random.randn(self.n2, 1)
 
-	def forward_propagation(self):
-		pass
+	def forward_propagation(self, X):
+		Z1 = np.dot(self.W1, X) + self.b1
+		A1 = self.g(Z1)
+		Z2 = np.dot(self.W2, A1) + self.b2
+		A2 = sigmoid(Z2)
+		assert Z1.shape == (self.n1, X.shape[1])
+		assert A1.shape == (self.n1, X.shape[1])
+		assert Z2.shape == (self.n2, X.shape[1])
+		assert A2.shape == (self.n2, X.shape[1])
+		return Z1, A1, Z2, A2
 
 	def back_propagation(self):
-		pass
+		self.dZ2 = self.A2 - self.Y_train
+		self.dW2 = np.dot(self.dZ2, self.A1.T) / self.m
+		self.db2 = np.sum(self.dZ2, axis=1, keepdims=True) / self.m
+		self.dZ1 = np.dot(self.W2.T, self.dZ2) * self.g_prime(self.Z1)
+		self.dW1 = np.dot(self.dZ1, self.X_train.T)
+		self.db1 = np.sum(self.dZ1, axis=1, keepdims=True) / self.m
+		assert self.dZ1.shape == self.Z1.shape
+		assert self.dW1.shape == self.W1.shape
+		assert self.db1.shape == self.b1.shape
+		assert self.dZ2.shape == self.Z2.shape
+		assert self.dW2.shape == self.W2.shape
+		assert self.db2.shape == self.b2.shape
 
-	def predict(self):
-		pass
+	def calculate_cost(self):
+		loss = self.Y_train * np.log(self.A2) + (1 - self.Y_train) * np.log(1 - self.A2)
+		sum_loss = np.sum(loss)
+		return -sum_loss / self.m
 
-	def build_model(self):
+	def predict_prob(self, X):
+		Z1, A1, Z2, A2 = self.forward_propagation(X)
+		return A2
+
+	def predict_class(self, X):
+		probs = self.predict_prob(X)
+		return 1 * (probs > 0.5)
+
+	@staticmethod
+	def accuracy(Y, Y_hat):
+		return np.mean(np.abs(Y_hat - Y))
+
+	def build_model(self,
+					n_hidden_nodes=3,
+					activation_function='sigmoid',
+					alpha=0.01,
+					max_iterations=10000,
+					# min_improvement=0.00001,
+					print_metrics=False
+					):
+
+		self.m = self.X_train.shape[1]
+		self.n0 = self.X_train.shape[0]
+		self.n1 = n_hidden_nodes
+		self.n2 = 1
+
+		assert self.X_train.shape == (self.n0, self.m)
+		assert self.Y_train.shape == (1, self.m)
+		assert self.X_test.shape[0] == self.n0
+		assert self.Y_test.shape[0] == 1
+
+		self.activation_function = activation_function
+		assert self.activation_function in ['sigmoid', 'tanh', 'relu', 'leaky_relu']
+
+		self.alpha = alpha
+		self.max_iterations = max_iterations
+		# self.min_improvement = min_improvement
+
 		self.set_g()
 		self.set_g_prime()
 		self.initialize_params()
 
+		self.cost = []
+		self.delta_cost = []
+
+		print('-' * 80)
+		print(f'activation function: {self.activation_function}')
+		print(f'n hidden nodes: {self.n1}')
+		print(f'learning rate: {self.alpha}')
+		print(f'n iterations: {max_iterations}')
+
+		# gradient descent -----------------------------------------------------------
+
+		for i in range(self.max_iterations):
+			self.Z1, self.A1, self.Z2, self.A2 = self.forward_propagation(self.X_train)
+			self.back_propagation()
+			self.W1 -= self.alpha * self.dW1
+			self.b1 -= self.alpha * self.db1
+			self.W2 -= self.alpha * self.dW2
+			self.b2 -= self.alpha * self.db2
+			self.cost.append(self.calculate_cost())
+			self.delta_cost.append(self.cost[i] - self.cost[i-1] if (i > 1) else None)
+
+			if print_metrics:
+				if (i+1) % round(self.max_iterations / 10) == 0:
+					print(f'Cost after iteration {i+1}: {round(self.cost[i], 5)} (delta: {round(self.delta_cost[i], 10)})')
+				if (i+1) == self.max_iterations:
+					print(f'stopping at iteration {i+1}: max iterations ({self.max_iterations}) reached')
+				# if i > 1000 and self.delta_cost[i] > -self.min_improvement:
+				# 	print(f'stopping at iteration {i}: delta cost ({self.delta_cost[i]}) > -min_improvement (-{self.min_improvement})')
+				# 	break
+
+		# predictions ----------------------------------------------------------------
+		self.Y_hat_train = self.predict_class(self.X_train)
+		self.Y_hat_test = self.predict_class(self.X_test)
+		self.accuracy(self.Y_train, self.Y_hat_train)
+		print(f'cost: {self.cost[-1]}')
+		print(f"train accuracy: {100 - self.accuracy(self.Y_train, self.Y_hat_train) * 100} %")
+		print(f"test accuracy: {100 - self.accuracy(self.Y_test, self.Y_hat_test) * 100} %")
 
 
 m_train = 1000
@@ -123,104 +251,10 @@ Y_test  = Y_test_orig.reshape((1, m_test))
 X_train = X_train_orig.T
 X_test  = X_test_orig.T
 
-nn = NN(
-	x_train=X_train,
-	y_train=Y_train,
-	x_test=X_test,
-	y_test=Y_test,
-)
+nn = NN(x_train=X_train, y_train=Y_train, x_test=X_test, y_test=Y_test)
 
-# plt.scatter(X_train_orig[:, 0], X_train_orig[:, 1], s=40, c=Y_train_orig, cmap=plt.cm.Spectral)
-# plt.show()
-
-# plt.scatter(X_train[0, :], X_train[1, :], s=40, c=Y_train[0, :], cmap=plt.cm.Spectral)
-# plt.show()
-
-def initialize_with_zeros(dim):
-	w = np.zeros((dim, 1), dtype=float)
-	b = 0.0
-	return w, b
-
-
-def propagate(w, b, X, Y):
-	m = X.shape[1]
-	A = sigmoid(np.dot(w.T, X) + b)
-	cost = -np.sum(Y * np.log(A) + (1 - Y) * np.log(1 - A)) / m
-	dw = np.dot(X, (A - Y).T) / m
-	db = np.sum(A - Y) / m
-	cost = np.squeeze(np.array(cost))
-	grads = {"dw": dw,
-			 "db": db}
-	return grads, cost
-
-
-def optimize(w, b, X, Y, num_iterations=100, learning_rate=0.009, print_cost=False):
-	w = copy.deepcopy(w)
-	b = copy.deepcopy(b)
-	costs = []
-	for i in range(num_iterations):
-		grads, cost = propagate(w, b, X, Y)
-		dw = grads["dw"]
-		db = grads["db"]
-		w = w - learning_rate * dw
-		b = b - learning_rate * db
-		if i % 100 == 0:
-			costs.append(cost)
-			if print_cost:
-				print("Cost after iteration %i: %f" % (i, cost))
-	params = {"w": w,
-			  "b": b}
-	grads = {"dw": dw,
-			 "db": db}
-	return params, grads, costs
-
-
-def predict(w, b, X):
-	m = X.shape[1]
-	Y_prediction = np.zeros((1, m))
-	w = w.reshape(X.shape[0], 1)
-	A = sigmoid(np.dot(w.T, X) + b)
-	for i in range(A.shape[1]):
-		if A[0, i] > 0.5:
-			Y_prediction[0, i] = 1
-		else:
-			Y_prediction[0, i] = 0
-	return Y_prediction
-
-
-def model(X_train, Y_train, X_test, Y_test, num_iterations=2000, learning_rate=0.5, print_cost=False):
-	w, b = initialize_with_zeros(X_train.shape[0])
-	params, grads, costs = optimize(w, b, X_train, Y_train, num_iterations=num_iterations, learning_rate=learning_rate,
-									print_cost=print_cost)
-	w = params["w"]
-	b = params["b"]
-	Y_prediction_test = predict(w, b, X_test)
-	Y_prediction_train = predict(w, b, X_train)
-	if print_cost:
-		print("train accuracy: {} %".format(100 - np.mean(np.abs(Y_prediction_train - Y_train)) * 100))
-		print("test accuracy: {} %".format(100 - np.mean(np.abs(Y_prediction_test - Y_test)) * 100))
-	d = {"costs": costs,
-		 "Y_prediction_test": Y_prediction_test,
-		 "Y_prediction_train": Y_prediction_train,
-		 "w": w,
-		 "b": b,
-		 "learning_rate": learning_rate,
-		 "num_iterations": num_iterations}
-	return d
-
-
-logistic_regression_model = model(X_train, Y_train, X_test, Y_test, num_iterations=2000, learning_rate=0.005, print_cost=True)
-
-costs = np.squeeze(logistic_regression_model['costs'])
-costs
-
-plt.plot(costs)
-plt.ylabel('cost')
-plt.xlabel('iterations (per hundreds)')
-plt.title("Learning rate =" + str(logistic_regression_model["learning_rate"]))
-plt.show()
-
-
-
+nn.build_model(n_hidden_nodes=10, alpha=0.1, max_iterations=10000)  # *
+nn.build_model(activation_function='relu', n_hidden_nodes=10, alpha=0.1, max_iterations=10000)  # *
+nn.build_model(activation_function='leaky_relu', n_hidden_nodes=10, alpha=0.1, max_iterations=10000)  # *
 
 
