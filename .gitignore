@@ -4,3 +4,7 @@
 _book
 _bookdown_files
 rsconnect
+
+.DS_Store
+.idea/
+data/
