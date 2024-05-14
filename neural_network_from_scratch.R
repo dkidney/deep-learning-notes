@@ -179,9 +179,9 @@ build_model = function(x_train, y_train, x_test, y_test, n_hidden_nodes,
   X_test = t(as.matrix(x_test))
 
   # initialize parameters ------------------------------------------------------
-  W1 = matrix(rnorm(n1 * n0), nrow=n1, ncol=n0)
+  W1 = matrix(rnorm(n1 * n0), nrow=n1, ncol=n0) * 0.01
   b1 = matrix(0, nrow=n1, ncol=1)
-  W2 = matrix(rnorm(n2 * n1), nrow=n2, ncol=n1)
+  W2 = matrix(rnorm(n2 * n1), nrow=n2, ncol=n1) * 0.01
   b2 = matrix(0, nrow=n2, ncol=1)
 
   stopifnot(dim(Y_train) == c(1, m))

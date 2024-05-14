@@ -118,10 +118,12 @@ class NN:
 			self.g_prime = leaky_relu_prime
 
 	def initialize_params(self):
-		self.W1 = np.random.randn(self.n1, self.n0)
-		self.b1 = np.random.randn(self.n1, 1)
-		self.W2 = np.random.randn(self.n2, self.n1)
-		self.b2 = np.random.randn(self.n2, 1)
+		self.W1 = np.random.randn(self.n1, self.n0) * 0.01
+		# self.b1 = np.random.randn(self.n1, 1)
+		self.b1 = np.zero(self.n1, 1)
+		self.W2 = np.random.randn(self.n2, self.n1) * 0.01
+		# self.b2 = np.random.randn(self.n2, 1)
+		self.b2 = np.zero(self.n2, 1)
 
 	def forward_propagation(self, X):
 		Z1 = np.dot(self.W1, X) + self.b1
