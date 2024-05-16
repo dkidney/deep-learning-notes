@@ -2,16 +2,311 @@
 
 ## Neural Networks and Deep Learning
 
-[Logistic regression]  
-[Single layer neural network]  
-[Activation functions]  
-[Gradient descent]
+[Notation]  
+[Forward propagation]  
+[Backpropagation]  
 
 ### Links {-}
 
+https://community.deeplearning.ai/t/dls-course-1-lecture-notes/11862
+
 https://dennybritz.com/posts/wildml/implementing-a-neural-network-from-scratch/
 
-https://community.deeplearning.ai/t/dls-course-1-lecture-notes/11862
+### Notation {-}
+
+$m$: number of training examples
+
+$L$: number of layers in the network (ignoring the input layer - i.e. $l \in \{0, 1, 2, ..., L\}$)
+
+$n^{[l]}$: number of nodes in layer $l$ (where $l=0$ indicates the input layer)
+
+$\mathbf{W}^{[l]}$: an ($n^{[l]}$, $n^{[l-1]}$) matrix of weights for layer $l$
+
+$\mathbf{b}^{[l]}$: an ($n^{[l]}$, 1) matrix of intercepts for layer $l$
+
+$g^{[l]}$: activation function for layer $l$
+
+$\mathbf{A}^{[l]}$: an ($n^{[l]}$, $m$) matrix of activations for layer $l$
+
+$\mathbf{X}$: an ($n^0$, $m$) matrix of input feature values  (where $\mathbf{X} := \mathbf{A}^{[0]}$)
+
+$\hat{\mathbf{Y}}$: an ($n^L$, $m$) matrix of output values (where $\hat{\mathbf{Y}} := \mathbf{A}^{[L]}$)
+
+<!-- $\mathbf{x}^{(i)}$: an ($n^0$, 1) matrix of input feature values for the $i$th training example -->
+
+<!-- $x_p^{(i)}$: value of input feature $p$ for the $i$th training example $i$ -->
+
+for a specific node in a given layer,
+
+$\mathbf{w}_j^{[l]}$: a (1, $n^{[l-1]}$) matrix of weights for layer $l$ node $j$
+
+$b_j^{[l]}$: the intercept for layer $l$ node $j$
+
+$\mathbf{a}_{j}^{[l]}$: an ($n^{[l]}$, 1) matrix of activations for layer $l$ node $j$ 
+
+<!-- $a_{j}^{[l](i)}$: activation for the $i$th training example for node $j$ layer $l$ -->
+
+### Forward propagation {-}
+
+#### Summary {-}
+
+Loop forwards over layers $1$ to $L$ and compute activations $\mathbf{A}^{[1]}$ to $\mathbf{A}^{[L]}$ - the activations from layer $l$ are used to compute the activations in layer $l+1$:
+
+* Use $\mathbf{W}^{[l]}$ and $\mathbf{b}^{[l]}$ to compute $\mathbf{Z}^{[l]}$.
+  
+$$\mathbf{Z}^{[l]} = \mathbf{W}^{[l]}\mathbf{A}^{[l-1]} + \mathbf{b}^{[l]}$$
+
+* Use $\mathbf{Z}^{[l]}$ to compute $\mathbf{A}^{[l]}$ (using activation function $g^{[l]}$).
+
+$$\mathbf{A}^{[l]} = g^{[l]}(\mathbf{Z}^{[l]})$$
+
+#### Details {-}
+
+The activations for layer $l$ can be written in generic matrix form as,
+
+$$\mathbf{A}^{[l]} = g^{[l]}(\mathbf{Z}^{[l]}) = g^{[l]}(\mathbf{W}^{[l]}\mathbf{A}^{[l-1]} + \mathbf{b}^{[l]})$$
+and equivalently as, 
+
+$$
+\begin{bmatrix} 
+  \mathbf{a}_1^{[l]} \\ 
+  \mathbf{a}_2^{[l]} \\ 
+  ... \\ 
+  \mathbf{a}_{j_k}^{[l]} 
+\end{bmatrix} 
+ = 
+g^{[l]}\left(
+\begin{bmatrix} 
+  \mathbf{z}_1^{[l]} \\ 
+  \mathbf{z}_2^{[l]} \\ 
+  ... \\ 
+  \mathbf{z}_{j_k}^{[l]}
+\end{bmatrix}
+\right)
+= 
+g^{[l]}\left(
+\begin{bmatrix} 
+  \mathbf{w}_1^{[l]} \\ 
+  \mathbf{w}_2^{[l]} \\ 
+  ... \\ 
+  \mathbf{w}_{j_k}^{[l]} \\ 
+\end{bmatrix}
+\begin{bmatrix} 
+  \mathbf{a}_1^{[l-1]} \\ 
+  \mathbf{a}_2^{[l-1]} \\ 
+  ... \\ 
+  \mathbf{a}_{j_{k-1}}^{[l-1]} 
+\end{bmatrix}
++ 
+\begin{bmatrix} 
+  b_1^{[l]} \\
+  b_2^{[l]} \\ 
+  ... \\
+  b_{j_k}^{[l]} \\
+\end{bmatrix} 
+\right)
+$$
+
+where,
+
+$$
+\begin{array}{l}
+\mathbf{a}_1^{[l]} = g^{[l]}(\mathbf{z}_1^{[l]}) = g^{[l]}(\mathbf{w}_1^{[1]T}\mathbf{a}_1^{[l-1]} + b_1^{[l]}) \\
+\mathbf{a}_2^{[l]} = g^{[l]}(\mathbf{z}_2^{[l]}) = g^{[l]}(\mathbf{w}_2^{[2]T}\mathbf{a}_2^{[l-1]} + b_2^{[l]}) \\
+... \\
+\mathbf{a}_{j_k}^{[l]} = g^{[l]}(\mathbf{z}_{j_k}^{[l]}) = g^{[l]}(\mathbf{w}_{j_k}^{[l]T}\mathbf{a}_{j_k}^{[l-1]} + b_{j_k}^{[l]}) \\
+\end{array}
+$$
+
+#### Example {-}
+
+E.g. for a NN with: 
+
+* $n_0=3$ (three input features)  
+* $n_1=4$ (four nodes in the hidden layer)  
+* $n_2=1$ (a single output layer)  
+
+$$\mathbf{A}^{[1]} = g(\mathbf{Z}^{[1]}) = g^{[1]}(\mathbf{W}^{[1]}\mathbf{X} + \mathbf{b}^{[1]})$$
+
+$$\hat{\mathbf{Y}} = \sigma(\mathbf{Z}^{[2]}) = \sigma(\mathbf{W}^{[2]}\mathbf{A}^{[1]} + \mathbf{b}^{[2]})$$
+equivalently, 
+
+$$
+\begin{bmatrix} 
+  \mathbf{a}_1^{[1]} \\ 
+  \mathbf{a}_2^{[1]} \\ 
+  \mathbf{a}_3^{[1]} \\ 
+  \mathbf{a}_4^{[1]} \\
+\end{bmatrix} 
+ = 
+g^{[1]}\left(
+\begin{bmatrix} 
+  \mathbf{z}_1^{[1]} \\ 
+  \mathbf{z}_2^{[1]} \\ 
+  \mathbf{z}_3^{[1]} \\ 
+  \mathbf{z}_4^{[1]} \\ 
+\end{bmatrix}
+\right)
+= 
+g^{[1]}\left(
+\begin{bmatrix} 
+  \mathbf{w}_1^{[1]} \\ 
+  \mathbf{w}_2^{[1]} \\ 
+  \mathbf{w}_3^{[1]} \\ 
+  \mathbf{w}_4^{[1]} \\ 
+\end{bmatrix}
+\begin{bmatrix} 
+  \mathbf{x}_1 \\ 
+  \mathbf{x}_2 \\ 
+  \mathbf{x}_3 \\
+\end{bmatrix}
++ 
+\begin{bmatrix} 
+  b_1^{[1]} \\
+  b_2^{[1]} \\ 
+  b_3^{[1]} \\ 
+  b_4^{[1]} \\ 
+\end{bmatrix} 
+\right)
+$$
+
+$$
+\hat{\mathbf{Y}}
+ = 
+\sigma\left(
+\mathbf{z}_1^{[2]}
+\right)
+= 
+\sigma\left(
+\mathbf{w}_1^{[2]}
+\begin{bmatrix} 
+  \mathbf{a}_1^{[1]} \\ 
+  \mathbf{a}_2^{[1]} \\ 
+  \mathbf{a}_3^{[1]} \\ 
+  \mathbf{a}_4^{[1]} \\
+\end{bmatrix} 
++ 
+b_1^{[2]}
+\right)
+$$
+
+where,
+
+$\mathbf{X} := \mathbf{A}^{[0]}$
+
+$\hat{\mathbf{Y}} := \mathbf{A}^{[2]}$
+
+$\sigma := g^{[2]}$
+
+### Backpropagation {-}
+
+#### Summary {-}
+
+Loop backwards over layers $L$ to $1$ and compute derivatives $d\mathbf{A}^{[L]}$ to $d\mathbf{A}^{[1]}$.
+
+* Use $d\mathbf{A}^{[l]}$ to compute $d\mathbf{Z}^{[l]}$ (using $g^{[l]\prime}$).
+
+$$d\mathbf{Z}^{[l]} = d\mathbf{A}^{[l]} \ast g^{[l]\prime}(\mathbf{Z}^{[l]})$$
+
+* Use $d\mathbf{Z}^{[l]}$ to compute $d\mathbf{W}^{[l]}$ and $d\mathbf{b}^{[l]}$.
+
+$$d\mathbf{W}^{[l]} = \frac{1}{m} d\mathbf{Z}^{[l]} \mathbf{A}^{[l-1]T}$$
+
+$$d\mathbf{b}^{[l]} \;\;= \frac{1}{m} \sum d\mathbf{Z}^{[l]}$$
+
+* Use $d\mathbf{W}^{[l]}$ to compute $d\mathbf{A}^{[l-1]}$
+
+$$d\mathbf{A}^{[l-1]} = \mathbf{W}^{[l]T}d\mathbf{Z}^{[l]}$$
+
+* Use $d\mathbf{W}^{[l]}$ and $d\mathbf{b}^{[l]}$ to update $\mathbf{W}^{[l]}$ and $\mathbf{b}^{[l]}$
+
+$$...$$
+
+#### Cost function {-}
+
+$$
+J(\mathbf{W}^{[1]}, \mathbf{b}^{[1]}, \mathbf{W}^{[2]}, \mathbf{b}^{[2]}) = 
+\frac{1}{m} \sum_{i = 1}^m{\mathcal{L}(\hat{y}^{(i)}, y^{(i)})}
+$$
+
+where the loss for a given observation (assuming a single output layer and a binary response) is:
+
+$$\mathcal{L}(\hat{y}^{(i)}, y^{(i)})=-y^{(i)}\log(\hat{y}^{(i)})+(1-y^{(i)})\log(1-\hat{y}^{(i)})$$
+
+where,
+
+$\hat{y}^{(i)}=a^{[l](i)}=\sigma(z^{[l](i)}) = \sigma(\mathbf{w}^{[l]}\mathbf{a}^{[l-1]}+\mathbf{b}^{[l]})$
+
+#### Derivatives {-}
+
+$d\mathbf{W}^{[l]} = \frac{1}{m} d\mathbf{Z}^{[l]} \mathbf{A}^{[l-1]T}$
+
+$d\mathbf{b}^{[l]} \;\;= \frac{1}{m} \sum d\mathbf{Z}^{[l]}$
+
+where,
+
+$d\mathbf{Z}^{[1]} = \mathbf{W}^{[2]T} d\mathbf{Z}^{[2]} * g^{[1]\prime}(\mathbf{Z}^{[1]})$
+
+$d\mathbf{Z}^{[2]} = \mathbf{A}^{[2]} - \mathbf{Y}$
+
+##### Derivation of derivatives {-}
+
+$d\mathbf{Z}^{[1]} = d\mathbf{A}^{[1]} \cdot g^{[1]\prime}(\mathbf{Z}^{[1]})$
+
+$d\mathbf{Z}^{[2]} = d\mathbf{A}^{[2]} \cdot g^{[2]\prime}(\mathbf{Z}^{[2]})$
+
+Assuming the activation function in the output layer is sigmoid:
+
+### Gradient descent {-}
+
+#### Update functions {-}
+
+$\mathbf{W}^{[l]} := \mathbf{W}^{[l]} - \alpha \; d\mathbf{W}^{[l]}$
+
+$\mathbf{b}^{[l]} \;\; := \mathbf{b}^{[l]} \;\; - \alpha \; d\mathbf{b}^{[l]}$
+
+where,
+
+$\alpha$ is the learning rate
+
+
+.
+.
+.
+.
+.
+.
+.
+.
+.
+
+
+
+
+
+
+
+where,
+
+dim $d\mathbf{Z}^{[l]} :=$ dim $\mathbf{Z}^{[l]} :=$ dim $\mathbf{A}^{[l]}$
+
+dim $d\mathbf{W}^{[l]} :=$ dim $\mathbf{W}^{[l]}$
+
+dim $d\mathbf{b}^{[l]} :=$ dim $\mathbf{b}^{[l]}$
+
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+
+
 
 
 ### Logistic regression
@@ -87,38 +382,6 @@ $\frac{\partial \mathcal{J}}{\partial b} = \frac{1}{m} \sum_i \frac{\partial \ma
 
 A single hidden layer neural network is like logistic regression, but repeated a lot of times.
 
-#### Notation {-}
-
-$m$ : number of training exanmples
-
-$n^{[k]}$ : number of nodes in layer $k$ (where $k=0$ indiwcates the input layer)
-
-$\mathbf{W}^{[k]}$ : a ($n^{[k]}$, $n^{[1-k]}$) matrix of weights for layer $k$
-
-$\mathbf{w}_j^{[k]}$ : a (1, $n^{[1-k]}$) matrix of weights for layer $k$ node $j$
-
-$\mathbf{b}^{[k]}$ : a (..., ...) matrix ....
-
-$\mathbf{A}^{[k]}$ : a ($n^{[k]}$, $m$) matrix of activations for layer $k$ (where $\mathbf{A}^{[0]}$ = $\mathbf{X}$)
-
-
-
-
-$\mathbf{x}^{(i)}$= vector of input feature values for the $i$th training example
-
-$x_p^{(i)}$= value of input feature $p$ for the $i$th training example $i$
-
-
-$w_{j, p}^{[k]}$= value of weight for feature $p$ for layer $k$ node $j$
-
-$\mathbf{a}^{[k]}$= activations for layer $k$ 
-
-$\mathbf{a}_{j}^{[k]}$= activations for layer $k$ node $j$ 
-
-$a_{j}^{[k](i)}$= activation for the $i$th training example for node $j$ layer $k$
-
-$n^{[k]}$= number of nodes in layer $k$
-
 #### Formulation {-}
 
 ##### Input layer {-}
@@ -126,7 +389,7 @@ $n^{[k]}$= number of nodes in layer $k$
 E.g. three nodes - one node per input feature ($n^{[0]} = 3$).
 
 $$
-\mathbf{a}^{[0]} = \mathbf{X} 
+\mathbf{A}^{[0]} = \mathbf{X} 
 $$
 
 equivalently, 
@@ -163,13 +426,13 @@ $$
 
 E.g. four nodes ($n^{[1]} = 4$).
 
-$$\mathbf{a}^{[1]} = \sigma(\mathbf{z}^{[1]}) = \sigma(\mathbf{W}^{[1]}\mathbf{x} + \mathbf{b}^{[1]})$$
+$$\mathbf{A}^{[1]} = g(\mathbf{Z}^{[1]}) = g(\mathbf{W}^{[1]}\mathbf{x} + \mathbf{b}^{[1]})$$
 
 equivalently, 
-$$\mathbf{a}_1^{[1]} = \sigma(\mathbf{z}_1^{[1]}) = \sigma(\mathbf{w}_1^{[1]T}\mathbf{x} + b_1^{[1]})$$
-$$\mathbf{a}_2^{[1]} = \sigma(\mathbf{z}_2^{[1]}) = \sigma(\mathbf{w}_2^{[1]T}\mathbf{x} + b_2^{[1]})$$
-$$\mathbf{a}_3^{[1]} = \sigma(\mathbf{z}_3^{[1]}) = \sigma(\mathbf{w}_3^{[1]T}\mathbf{x} + b_3^{[1]})$$
-$$\mathbf{a}_4^{[1]} = \sigma(\mathbf{z}_4^{[1]}) = \sigma(\mathbf{w}_4^{[1]T}\mathbf{x} + b_4^{[1]})$$
+$$\mathbf{a}_1^{[1]} = g(\mathbf{z}_1^{[1]}) = g(\mathbf{w}_1^{[1]T}\mathbf{x} + b_1^{[1]})$$
+$$\mathbf{a}_2^{[1]} = g(\mathbf{z}_2^{[1]}) = g(\mathbf{w}_2^{[1]T}\mathbf{x} + b_2^{[1]})$$
+$$\mathbf{a}_3^{[1]} = g(\mathbf{z}_3^{[1]}) = g(\mathbf{w}_3^{[1]T}\mathbf{x} + b_3^{[1]})$$
+$$\mathbf{a}_4^{[1]} = g(\mathbf{z}_4^{[1]}) = g(\mathbf{w}_4^{[1]T}\mathbf{x} + b_4^{[1]})$$
 
 equivalently, 
 
@@ -181,7 +444,7 @@ $$
   \mathbf{a}_4^{[1]} 
 \end{bmatrix} 
  = 
-\sigma\left(
+g\left(
 \begin{bmatrix} 
   \mathbf{z}_1^{[1]} \\ 
   \mathbf{z}_2^{[1]} \\ 
@@ -199,7 +462,7 @@ $$
   \mathbf{a}_4^{[1]} 
 \end{bmatrix} 
  = 
-\sigma\left(
+g\left(
 \begin{bmatrix} 
   \mathbf{w}_1^{[1]} \\ 
   \mathbf{w}_2^{[1]} \\ 
@@ -228,7 +491,7 @@ $$
   a_3^{[1](1)} \ ... \ a_3^{[1](m)} \\ 
   a_4^{[1](1)} \ ... \ a_4^{[1](m)} \\ 
 \end{bmatrix} 
- = \sigma\left(
+ = g\left(
 \begin{bmatrix} 
   w_{1,1}^{[1]} \ w_{1,2}^{[1]} \ w_{1,3}^{[1]} \\ 
   w_{2,1}^{[1]} \ w_{2,2}^{[1]} \ w_{2,3}^{[1]} \\ 
@@ -253,14 +516,14 @@ $$
 
 Single node ($n^{[2]} = 1$).
 
-$$\mathbf{a}^{[2]} = \sigma(\mathbf{z}^{[2]}) = \sigma(\mathbf{W}^{[2]}\mathbf{a}^{[1]} + b^{[2]}) = \widehat{\mathbf{y}}$$
+$$\mathbf{A}^{[2]} = g(\mathbf{Z}^{[2]}) = g(\mathbf{W}^{[2]}\mathbf{A}^{[1]} + b^{[2]}) = \widehat{\mathbf{y}}$$
 equivalently, 
 
 $$
 \begin{bmatrix} 
   a_1^{[2](1)} \ ... \ a_1^{[2](m)} \\
 \end{bmatrix} 
- = \sigma\left(
+ = g\left(
 \begin{bmatrix} 
   w_{1, 1}^{[2]} \  w_{1, 2}^{[2]} \ w_{1, 3}^{[2]} \ w_{1, 4}^{[2]} \\
 \end{bmatrix} 
@@ -371,10 +634,10 @@ $$
 
 $$
 \begin{array}{l}
-\mathbf{W}^{[1]} &: = \mathbf{W}^{[1]} - \alpha \; d\mathbf{W}^{[1]} \\
-\mathbf{b}^{[1]} &: = \mathbf{b}^{[1]} - \alpha \; d\mathbf{b}^{[1]} \\
-\mathbf{W}^{[2]} &: = \mathbf{W}^{[2]} - \alpha \; d\mathbf{W}^{[2]} \\
-\mathbf{b}^{[2]} &: = \mathbf{b}^{[2]} - \alpha \; d\mathbf{b}^{[2]} \\
+\mathbf{W}^{[1]} & := \mathbf{W}^{[1]} - \alpha \; d\mathbf{W}^{[1]} \\
+\mathbf{b}^{[1]} & := \mathbf{b}^{[1]} - \alpha \; d\mathbf{b}^{[1]} \\
+\mathbf{W}^{[2]} & := \mathbf{W}^{[2]} - \alpha \; d\mathbf{W}^{[2]} \\
+\mathbf{b}^{[2]} & := \mathbf{b}^{[2]} - \alpha \; d\mathbf{b}^{[2]} \\
 \end{array}
 $$
 * repeat until convergence

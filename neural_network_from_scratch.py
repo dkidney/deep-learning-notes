@@ -118,12 +118,12 @@ class NN:
 			self.g_prime = leaky_relu_prime
 
 	def initialize_params(self):
-		self.W1 = np.random.randn(self.n1, self.n0) * 0.01
+		self.W1 = np.random.randn(self.n1, self.n0)
 		# self.b1 = np.random.randn(self.n1, 1)
-		self.b1 = np.zero(self.n1, 1)
-		self.W2 = np.random.randn(self.n2, self.n1) * 0.01
+		self.b1 = np.zeros(self.n1).reshape(self.n1, 1)
+		self.W2 = np.random.randn(self.n2, self.n1)
 		# self.b2 = np.random.randn(self.n2, 1)
-		self.b2 = np.zero(self.n2, 1)
+		self.b2 = np.zeros(self.n2).reshape(self.n2, 1)
 
 	def forward_propagation(self, X):
 		Z1 = np.dot(self.W1, X) + self.b1
@@ -131,9 +131,9 @@ class NN:
 		Z2 = np.dot(self.W2, A1) + self.b2
 		A2 = sigmoid(Z2)
 		assert Z1.shape == (self.n1, X.shape[1])
-		assert A1.shape == (self.n1, X.shape[1])
 		assert Z2.shape == (self.n2, X.shape[1])
-		assert A2.shape == (self.n2, X.shape[1])
+		assert A1.shape == Z1.shape
+		assert A2.shape == Z2.shape
 		return Z1, A1, Z2, A2
 
 	def back_propagation(self):
@@ -141,7 +141,7 @@ class NN:
 		self.dW2 = np.dot(self.dZ2, self.A1.T) / self.m
 		self.db2 = np.sum(self.dZ2, axis=1, keepdims=True) / self.m
 		self.dZ1 = np.dot(self.W2.T, self.dZ2) * self.g_prime(self.Z1)
-		self.dW1 = np.dot(self.dZ1, self.X_train.T)
+		self.dW1 = np.dot(self.dZ1, self.X_train.T) / self.m
 		self.db1 = np.sum(self.dZ1, axis=1, keepdims=True) / self.m
 		assert self.dZ1.shape == self.Z1.shape
 		assert self.dW1.shape == self.W1.shape
@@ -210,6 +210,8 @@ class NN:
 
 		for i in range(self.max_iterations):
 			self.Z1, self.A1, self.Z2, self.A2 = self.forward_propagation(self.X_train)
+			if i == 0:
+				print(f'initial cost:  {round(self.calculate_cost(), 5)}')
 			self.back_propagation()
 			self.W1 -= self.alpha * self.dW1
 			self.b1 -= self.alpha * self.db1
@@ -231,7 +233,7 @@ class NN:
 		self.Y_hat_train = self.predict_class(self.X_train)
 		self.Y_hat_test = self.predict_class(self.X_test)
 		self.accuracy(self.Y_train, self.Y_hat_train)
-		print(f'cost: {self.cost[-1]}')
+		print(f'final cost: {self.cost[-1]}')
 		print(f"train accuracy: {100 - self.accuracy(self.Y_train, self.Y_hat_train) * 100} %")
 		print(f"test accuracy: {100 - self.accuracy(self.Y_test, self.Y_hat_test) * 100} %")
 
@@ -256,7 +258,7 @@ X_test  = X_test_orig.T
 nn = NN(x_train=X_train, y_train=Y_train, x_test=X_test, y_test=Y_test)
 
 nn.build_model(n_hidden_nodes=10, alpha=0.1, max_iterations=10000)  # *
-nn.build_model(activation_function='relu', n_hidden_nodes=10, alpha=0.1, max_iterations=10000)  # *
-nn.build_model(activation_function='leaky_relu', n_hidden_nodes=10, alpha=0.1, max_iterations=10000)  # *
+nn.build_model(activation_function='relu', n_hidden_nodes=10, alpha=0.1, max_iterations=5000)  # *
+nn.build_model(activation_function='leaky_relu', n_hidden_nodes=10, alpha=0.1, max_iterations=5000)  # *
 
 

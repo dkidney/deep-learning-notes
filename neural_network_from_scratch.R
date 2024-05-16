@@ -131,7 +131,7 @@ back_propagation = function(X, Y, Z1, A1, W2, Z2, A2, activation_function) {
   dW2 = dZ2 %*% t(A1) / m
   db2 = sum(dZ2) / m
   dZ1 = t(W2) %*% dZ2 * g_prime(activation_function)(Z1)
-  dW1 = dZ1 %*% t(X)
+  dW1 = dZ1 %*% t(X) / m
   db1 = sum(dZ1) / m
   return(list(
     'db1' = db1,
@@ -179,9 +179,9 @@ build_model = function(x_train, y_train, x_test, y_test, n_hidden_nodes,
   X_test = t(as.matrix(x_test))
 
   # initialize parameters ------------------------------------------------------
-  W1 = matrix(rnorm(n1 * n0), nrow=n1, ncol=n0) * 0.01
+  W1 = matrix(rnorm(n1 * n0), nrow=n1, ncol=n0)
   b1 = matrix(0, nrow=n1, ncol=1)
-  W2 = matrix(rnorm(n2 * n1), nrow=n2, ncol=n1) * 0.01
+  W2 = matrix(rnorm(n2 * n1), nrow=n2, ncol=n1)
   b2 = matrix(0, nrow=n2, ncol=1)
 
   stopifnot(dim(Y_train) == c(1, m))
@@ -209,6 +209,8 @@ build_model = function(x_train, y_train, x_test, y_test, n_hidden_nodes,
     stopifnot(dim(Z2) == c(n2, m))
     stopifnot(dim(A2) == dim(Z2))
 
+    cost[i] = -sum(Y_train * log(A2) + (1 - Y_train) * log(1 - A2)) / m
+
     # back propagation
     bprop = back_propagation(X_train, Y_train, Z1, A1, W2, Z2, A2, activation_function)
     dW1 = bprop[['dW1']]
@@ -216,11 +218,10 @@ build_model = function(x_train, y_train, x_test, y_test, n_hidden_nodes,
     dW2 = bprop[['dW2']]
     db2 = bprop[['db2']]
 
-    # stopifnot(dim(dZ1) == c(n1, m))
-    stopifnot(dim(dW1) == c(n1, n0))
-    # stopifnot(dim(db1) == c(n1, n0))
-    stopifnot(dim(dW2) == c(n2, n1))
-    # stopifnot(dim(db2) == c(n1, n0))
+    stopifnot(dim(dW1) == dim(W1))
+    stopifnot(dim(db1) == dim(b1))
+    stopifnot(dim(dW2) == dim(W2))
+    stopifnot(dim(db2) == dim(b2))
 
     # # Add regularization terms (b1 and b2 don't have regularization terms)
     # dW2 += reg_lambda * W2
@@ -236,7 +237,7 @@ build_model = function(x_train, y_train, x_test, y_test, n_hidden_nodes,
 
     delta_cost[i] = if (i > 1) cost[i] - cost[i-1] else NA
 
-    if (print_metrics & (i %% 100 == 0)) {
+    if (print_metrics & (i==1 | i %% 100 == 0)) {
       print(str_glue("Cost after iteration {i}: {round(cost[i], 5)} (delta: {round(delta_cost[i], 5)})"))
     }
 
